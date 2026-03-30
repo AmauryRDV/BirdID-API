@@ -1,12 +1,15 @@
-import { Hono } from 'hono';
-import type { Observation } from '../tables/observations.js';
-import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../tables/observations.js';
+import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
+import {
+  getAllObservationsSQL,
+  getObservationByIdSQL,
+  insertObservationSQL,
+  updateObservationSQL,
+  deleteObservationSQL
+} from '../db/tables/observations.js';
 
-const observationRoutes = new Hono();
-
-observationRoutes.get('/', async (c) => {
+export const getAllObservations = async (c: Context) => {
   try {
     const result = await pool.query(getAllObservationsSQL);
     return c.json(result.rows);
@@ -17,10 +20,10 @@ observationRoutes.get('/', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-observationRoutes.get('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const getObservationById = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(getObservationByIdSQL, [id]);
@@ -33,9 +36,9 @@ observationRoutes.get('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-observationRoutes.post('/', async (c) => {
+export const createObservation = async (c: Context) => {
   try {
     const body = await c.req.json();
     const { birdid, userid, birdname, date, time, note, size, gender, imagepath } = body;
@@ -51,10 +54,10 @@ observationRoutes.post('/', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-observationRoutes.put('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const updateObservation = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const body = await c.req.json();
@@ -72,10 +75,10 @@ observationRoutes.put('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-observationRoutes.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const deleteObservation = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(deleteObservationSQL, [id]);
@@ -88,6 +91,4 @@ observationRoutes.delete('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
-
-export default observationRoutes;
+};

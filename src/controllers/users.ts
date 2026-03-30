@@ -1,13 +1,17 @@
-import { Hono } from 'hono';
-import type { User } from '../tables/users.js';
-import { hashPassword } from '../services/hashpassword.js';
-import { getAllUsersSQL, getUserByIdSQL, insertUserSQL, updateUserSQL, deleteUserSQL } from '../tables/users.js';
+import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
+import { hashPassword, verifyPassword } from '../services/hashpassword.js';
 
-const userRoutes = new Hono();
+import {
+  getAllUsersSQL,
+  getUserByIdSQL,
+  insertUserSQL, 
+  updateUserSQL,
+  deleteUserSQL
+} from '../db/tables/users.js';
 
-userRoutes.get('/', async (c) => {
+export const getAllUsers = async (c: Context) => {
   try {
     const result = await pool.query(getAllUsersSQL);
     return c.json(result.rows);
@@ -18,10 +22,10 @@ userRoutes.get('/', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-userRoutes.get('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const getUserById = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(getUserByIdSQL, [id]);
@@ -34,9 +38,24 @@ userRoutes.get('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-userRoutes.post('/', async (c) => {
+export const getUserByEmail = async (c: Context) => {
+  const email = c.req.param('email');
+  try {
+    const result = await pool.query('SELECT id, username, email, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) return c.notFound();
+    return c.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    if (err instanceof DatabaseError) {
+      return c.json({ error: 'Erreur de base de données lors de la récupération de l\'utilisateur' }, 500);
+    }
+    return c.json({ error: 'Erreur interne du serveur' }, 500);
+  }
+};
+
+export const createUser = async (c: Context) => {
   try {
     const body = await c.req.json();
     const { userName, email, password, notes, points, avatar } = body;
@@ -54,10 +73,10 @@ userRoutes.post('/', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-userRoutes.put('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const updateUser = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const body = await c.req.json();
@@ -77,10 +96,10 @@ userRoutes.put('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
+};
 
-userRoutes.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+export const deleteUser = async (c: Context) => {
+  const id = parseInt(c.req.param('id') || '', 10);
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(deleteUserSQL, [id]);
@@ -93,6 +112,4 @@ userRoutes.delete('/:id', async (c) => {
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
   }
-});
-
-export default userRoutes;
+};

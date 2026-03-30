@@ -8,9 +8,7 @@ import observationRoutes from './routes/observations.js'
 
 const app = new Hono()
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.get('/', (c) => c.text('Hello Hono!'))
 
 app.route('/users', userRoutes)
 app.route('/birds', birdRoutes)
