@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Observation } from '../tables/observations.js';
 import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../tables/observations.js';
 import { pool } from '../db_connect.js';
+import { isPositiveInteger, isNonEmptyString, isValidDateFormat, isValidTimeFormat } from '../services/validation.js';
 import { DatabaseError } from 'pg';
 
 const observationRoutes = new Hono();
@@ -42,6 +43,16 @@ observationRoutes.post('/', async (c) => {
     if (!birdid || !userid || !birdname || !date || !time || !size || !gender || !imagepath) {
       return c.json({ error: 'Champs requis manquants' }, 400);
     }
+    if (!isPositiveInteger(birdid)) return c.json({ error: 'L\'ID de l\'oiseau doit être un entier positif' }, 400);
+    if (!isPositiveInteger(userid)) return c.json({ error: 'L\'ID de l\'utilisateur doit être un entier positif' }, 400);
+    if (!isNonEmptyString(birdname)) return c.json({ error: 'Le nom de l\'oiseau ne peut pas être vide' }, 400);
+    if (!isValidDateFormat(date)) return c.json({ error: 'Le format de la date est invalide (attendu: YYYY-MM-DD)' }, 400);
+    if (!isValidTimeFormat(time)) return c.json({ error: 'Le format de l\'heure est invalide (attendu: HH:MM:SS)' }, 400);
+    if (note !== undefined && note !== null && !isNonEmptyString(note)) return c.json({ error: 'La note doit être une chaîne de caractères non vide' }, 400);
+    if (!isPositiveInteger(size)) return c.json({ error: 'La taille doit être un entier positif' }, 400);
+    // Exemple de validation pour un champ avec des valeurs spécifiques
+    if (!isNonEmptyString(gender) || !['male', 'female', 'unknown'].includes(gender.toLowerCase())) return c.json({ error: 'Le genre est invalide (attendu: male, female, unknown)' }, 400);
+    if (!isNonEmptyString(imagepath)) return c.json({ error: 'Le chemin de l\'image ne peut pas être vide' }, 400);
     const result = await pool.query(insertObservationSQL, [birdid, userid, birdname, date, time, note || null, size, gender, imagepath]);
     return c.json(result.rows[0], 201);
   } catch (err) {
@@ -62,6 +73,15 @@ observationRoutes.put('/:id', async (c) => {
     if (!birdid || !userid || !birdname || !date || !time || !size || !gender || !imagepath) {
       return c.json({ error: 'Champs requis manquants' }, 400);
     }
+    if (!isPositiveInteger(birdid)) return c.json({ error: 'L\'ID de l\'oiseau doit être un entier positif' }, 400);
+    if (!isPositiveInteger(userid)) return c.json({ error: 'L\'ID de l\'utilisateur doit être un entier positif' }, 400);
+    if (!isNonEmptyString(birdname)) return c.json({ error: 'Le nom de l\'oiseau ne peut pas être vide' }, 400);
+    if (!isValidDateFormat(date)) return c.json({ error: 'Le format de la date est invalide (attendu: YYYY-MM-DD)' }, 400);
+    if (!isValidTimeFormat(time)) return c.json({ error: 'Le format de l\'heure est invalide (attendu: HH:MM:SS)' }, 400);
+    if (note !== undefined && note !== null && !isNonEmptyString(note)) return c.json({ error: 'La note doit être une chaîne de caractères non vide' }, 400);
+    if (!isPositiveInteger(size)) return c.json({ error: 'La taille doit être un entier positif' }, 400);
+    if (!isNonEmptyString(gender) || !['male', 'female', 'unknown'].includes(gender.toLowerCase())) return c.json({ error: 'Le genre est invalide (attendu: male, female, unknown)' }, 400);
+    if (!isNonEmptyString(imagepath)) return c.json({ error: 'Le chemin de l\'image ne peut pas être vide' }, 400);
     const result = await pool.query(updateObservationSQL, [birdid, userid, birdname, date, time, note || null, size, gender, imagepath, id]);
     if (result.rows.length === 0) return c.notFound();
     return c.json(result.rows[0]);
