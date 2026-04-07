@@ -31,7 +31,7 @@ INSERT INTO users (userName, email, password, notes, points, avatar) VALUES ($1,
 `;
 
 export const getUserByEmailSQL = `
-SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1;
+SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1;
 `;
 
 export const getUserByIdSQL = `

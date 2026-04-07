@@ -15,7 +15,7 @@ export const insertUserSQL = `
 INSERT INTO users (userName, email, password, notes, points, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, userName, email, password, notes, points, avatar, created_at, updated_at;
 `;
 export const getUserByEmailSQL = `
-SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1;
+SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1;
 `;
 export const getUserByIdSQL = `
 SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users WHERE id = $1;

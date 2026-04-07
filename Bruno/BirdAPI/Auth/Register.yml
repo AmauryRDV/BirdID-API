@@ -5,10 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:3000/auth/register
-  headers:
-    - name: username
-      value: TestUser
+  url: https://birdid-api.onrender.com/auth/register
   body:
     type: json
     data: |
