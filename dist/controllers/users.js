@@ -1,18 +1,11 @@
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { hashPassword, verifyPassword } from '../services/hashpassword.js';
-import { sign } from 'jsonwebtoken'; // Importez sign pour générer le JWT
-import 'dotenv/config'; // Assurez-vous que les variables d'environnement sont chargées
-import { getAllUsersSQL, // Cette requête devrait aussi exclure le mot de passe
-getUserByIdSQL, insertUserSQL, updateUserSQL, deleteUserSQL } from '../db/tables/users.js';
-// GET /users - Get all users
-// IMPORTANT: Cette route devrait idéalement être accessible uniquement par les administrateurs et ne doit pas retourner les mots de passe.
+import { getAllUsersSQL, getUserByIdSQL, insertUserSQL, updateUserSQL, deleteUserSQL } from '../db/tables/users.js';
 export const getAllUsers = async (c) => {
     try {
-        // Modifiez getAllUsersSQL ou sélectionnez explicitement les colonnes pour exclure le mot de passe.
-        // Pour l'instant, nous filtrons le mot de passe côté application.
-        const result = await pool.query('SELECT id, username, email, notes, points, avatar, created_at, updated_at FROM users');
-        return c.json(result.rows.map(row => { const { password, ...rest } = row; return rest; })); // S'assure que le mot de passe n'est pas renvoyé
+        const result = await pool.query(getAllUsersSQL);
+        return c.json(result.rows);
     }
     catch (err) {
         console.error(err);
@@ -22,7 +15,6 @@ export const getAllUsers = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// GET /users/:id - Get user by ID
 export const getUserById = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -30,9 +22,8 @@ export const getUserById = async (c) => {
     try {
         const result = await pool.query(getUserByIdSQL, [id]);
         if (result.rows.length === 0)
-            return c.json({ error: 'Utilisateur non trouvé' }, 404);
-        const { password, ...userWithoutPassword } = result.rows[0]; // Exclure le mot de passe
-        return c.json(userWithoutPassword);
+            return c.notFound();
+        return c.json(result.rows[0]);
     }
     catch (err) {
         console.error(err);
@@ -42,15 +33,13 @@ export const getUserById = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// GET /users/email/:email - Get user by email
 export const getUserByEmail = async (c) => {
     const email = c.req.param('email');
     try {
-        const result = await pool.query('SELECT id, username, email, password, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1', [email]);
+        const result = await pool.query('SELECT id, username, email, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0)
-            return c.json({ error: 'Utilisateur non trouvé' }, 404);
-        const { password, ...userWithoutPassword } = result.rows[0]; // Exclure le mot de passe
-        return c.json(userWithoutPassword);
+            return c.notFound();
+        return c.json(result.rows[0]);
     }
     catch (err) {
         console.error(err);
@@ -60,32 +49,6 @@ export const getUserByEmail = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// POST /auth/login - Connexion utilisateur
-export const loginUser = async (c) => {
-    try {
-        const body = await c.req.json();
-        const { email, password } = body;
-        if (!email || !password) {
-            return c.json({ error: 'Email et mot de passe requis' }, 400);
-        }
-        const result = await pool.query('SELECT id, email, password FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
-        if (!user) {
-            return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
-        }
-        const isPasswordValid = await verifyPassword(password, user.password);
-        if (!isPasswordValid) {
-            return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
-        }
-        const token = sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'votre_cle_secrete_jwt_par_defaut', { expiresIn: '1h' });
-        return c.json({ token });
-    }
-    catch (err) {
-        console.error(err);
-        return c.json({ error: 'Erreur interne du serveur lors de la connexion' }, 500);
-    }
-};
-// POST /users - Create a new user
 export const createUser = async (c) => {
     try {
         const body = await c.req.json();
@@ -107,7 +70,6 @@ export const createUser = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// PUT /users/:id - Update user
 export const updateUser = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -134,7 +96,6 @@ export const updateUser = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// DELETE /users/:id - Delete user
 export const deleteUser = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))

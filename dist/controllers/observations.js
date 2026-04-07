@@ -1,7 +1,6 @@
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
-// GET /observations - Get all observations
 export const getAllObservations = async (c) => {
     try {
         const result = await pool.query(getAllObservationsSQL);
@@ -15,7 +14,6 @@ export const getAllObservations = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// GET /observations/:id - Get observation by ID
 export const getObservationById = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -34,7 +32,6 @@ export const getObservationById = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// POST /observations - Create a new observation
 export const createObservation = async (c) => {
     try {
         const body = await c.req.json();
@@ -53,7 +50,6 @@ export const createObservation = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// PUT /observations/:id - Update observation
 export const updateObservation = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -77,7 +73,6 @@ export const updateObservation = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// DELETE /observations/:id - Delete observation
 export const deleteObservation = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))

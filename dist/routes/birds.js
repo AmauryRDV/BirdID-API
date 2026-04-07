@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { getAllBirdsSQL, getBirdByIdSQL, insertBirdSQL, updateBirdSQL, deleteBirdSQL } from '../tables/birds.js';
 import { pool } from '../db_connect.js';
+import { isNonEmptyString } from '../services/validation.js';
 import { DatabaseError } from 'pg';
 const birdRoutes = new Hono();
 // GET /birds - Get all birds
@@ -44,6 +45,18 @@ birdRoutes.post('/', async (c) => {
         if (!birdname || !latinbirdname || !media || !funfact || !rarity || !habitat) {
             return c.json({ error: 'Champs requis manquants' }, 400);
         }
+        if (!isNonEmptyString(birdname))
+            return c.json({ error: 'Le nom de l\'oiseau ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(latinbirdname))
+            return c.json({ error: 'Le nom latin de l\'oiseau ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(media))
+            return c.json({ error: 'Le média ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(funfact))
+            return c.json({ error: 'Le funfact ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(rarity))
+            return c.json({ error: 'La rareté ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(habitat))
+            return c.json({ error: 'L\'habitat ne peut pas être vide' }, 400);
         const result = await pool.query(insertBirdSQL, [birdname, latinbirdname, media, funfact, rarity, habitat]);
         return c.json(result.rows[0], 201);
     }
@@ -66,6 +79,18 @@ birdRoutes.put('/:id', async (c) => {
         if (!birdname || !latinbirdname || !media || !funfact || !rarity || !habitat) {
             return c.json({ error: 'Champs requis manquants' }, 400);
         }
+        if (!isNonEmptyString(birdname))
+            return c.json({ error: 'Le nom de l\'oiseau ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(latinbirdname))
+            return c.json({ error: 'Le nom latin de l\'oiseau ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(media))
+            return c.json({ error: 'Le média ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(funfact))
+            return c.json({ error: 'Le funfact ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(rarity))
+            return c.json({ error: 'La rareté ne peut pas être vide' }, 400);
+        if (!isNonEmptyString(habitat))
+            return c.json({ error: 'L\'habitat ne peut pas être vide' }, 400);
         const result = await pool.query(updateBirdSQL, [birdname, latinbirdname, media, funfact, rarity, habitat, id]);
         if (result.rows.length === 0)
             return c.notFound();

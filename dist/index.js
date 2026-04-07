@@ -5,10 +5,14 @@ import 'dotenv/config';
 import userRoutes from './routes/users.js';
 import birdRoutes from './routes/birds.js';
 import observationRoutes from './routes/observations.js';
+import authRoutes from './routes/auth.js';
+import { honoJwtMiddleware } from './middleware/middleware.js';
 const app = new Hono();
-app.get('/', (c) => {
-    return c.text('Hello Hono!');
-});
+app.get('/', (c) => c.text('Hello Hono!'));
+app.route('/auth', authRoutes);
+app.use('/users/*', honoJwtMiddleware);
+app.use('/birds/*', honoJwtMiddleware);
+app.use('/observations/*', honoJwtMiddleware);
 app.route('/users', userRoutes);
 app.route('/birds', birdRoutes);
 app.route('/observations', observationRoutes);

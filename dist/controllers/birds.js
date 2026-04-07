@@ -1,7 +1,6 @@
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { getAllBirdsSQL, getBirdByIdSQL, insertBirdSQL, updateBirdSQL, deleteBirdSQL } from '../db/tables/birds.js';
-// GET /birds - Get all birds
 export const getAllBirds = async (c) => {
     try {
         const result = await pool.query(getAllBirdsSQL);
@@ -15,7 +14,6 @@ export const getAllBirds = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// GET /birds/:id - Get bird by ID
 export const getBirdById = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -34,7 +32,6 @@ export const getBirdById = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// POST /birds - Create a new bird
 export const createBird = async (c) => {
     try {
         const body = await c.req.json();
@@ -53,7 +50,6 @@ export const createBird = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// PUT /birds/:id - Update bird
 export const updateBird = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
@@ -77,7 +73,6 @@ export const updateBird = async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 };
-// DELETE /birds/:id - Delete bird
 export const deleteBird = async (c) => {
     const id = parseInt(c.req.param('id') || '', 10);
     if (isNaN(id))
