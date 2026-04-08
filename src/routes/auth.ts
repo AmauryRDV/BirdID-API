@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword } from '../services/hashpassword.js';
 import { getAllUsersSQL, getUserByIdSQL, insertUserSQL, updateUserSQL, deleteUserSQL, getUserByEmailSQL } from '../tables/users.js';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
-// import { sign } from 'jsonwebtoken';
+import { sign } from 'hono/jwt';
 import { isValidEmail, isStrongPassword, isNonEmptyString } from '../services/validation.js';
 import 'dotenv/config'; 
 
@@ -28,8 +28,14 @@ authRoutes.post('/login', async (c) => {
         const user = result.rows[0] as User;
         const isPasswordValid = await verifyPassword(password, user.password);
         if (!isPasswordValid) return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
-        // const token = sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-        return c.json({ message: 'Connexion réussie', id: user.id, userName: user.username }, 200);
+        
+        const payload = {
+            id: user.id,
+            email: user.email,
+            exp: Math.floor(Date.now() / 1000) + 60 * 60, // Le token expirera dans 1 heure (3600 secondes)
+        };
+        const token = await sign(payload, JWT_SECRET);
+        return c.json({ message: 'Connexion réussie', token, id: user.id, userName: user.username }, 200);
     } catch (err) {
         console.error(err);
         if (err instanceof DatabaseError) {

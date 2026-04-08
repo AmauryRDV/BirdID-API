@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { env } from 'process'
 import 'dotenv/config'
+import { cors } from 'hono/cors'
 import userRoutes from './routes/users.js'
 import birdRoutes from './routes/birds.js'
 import observationRoutes from './routes/observations.js'
@@ -10,13 +11,16 @@ import { honoJwtMiddleware } from './middleware/middleware.js';
 
 const app = new Hono()
 
+app.use('/*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}))
+
 app.get('/', (c) => c.text('Hello Hono!'))
 
-app.route('/auth', authRoutes)
-
-app.use('/users/*', honoJwtMiddleware);
-app.use('/birds/*', honoJwtMiddleware);
-app.use('/observations/*', honoJwtMiddleware);
+app.route('/', authRoutes)
 
 app.route('/users', userRoutes)
 app.route('/birds', birdRoutes)

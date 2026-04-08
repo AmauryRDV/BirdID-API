@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { env } from 'process';
 import 'dotenv/config';
+import { cors } from 'hono/cors';
 import userRoutes from './routes/users.js';
 import birdRoutes from './routes/birds.js';
 import observationRoutes from './routes/observations.js';
@@ -13,6 +14,12 @@ app.route('/auth', authRoutes);
 app.use('/users/*', honoJwtMiddleware);
 app.use('/birds/*', honoJwtMiddleware);
 app.use('/observations/*', honoJwtMiddleware);
+app.use('*', cors({
+    origin: '*',
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
 app.route('/users', userRoutes);
 app.route('/birds', birdRoutes);
 app.route('/observations', observationRoutes);

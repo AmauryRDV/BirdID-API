@@ -4,10 +4,20 @@ import { getAllUsersSQL, getUserByIdSQL, insertUserSQL, updateUserSQL, deleteUse
 import { pool } from '../db_connect.js';
 import { isValidEmail, isStrongPassword, isNonEmptyString, isPositiveInteger } from '../services/validation.js';
 import { DatabaseError } from 'pg';
+import { honoJwtMiddleware } from '../middleware/middleware.js';
 const userRoutes = new Hono();
 userRoutes.get('/', async (c) => {
     try {
-        const result = await pool.query(getAllUsersSQL);
+        let page = parseInt(c.req.query('page') || '1', 10);
+        let limit = parseInt(c.req.query('limit') || '20', 10);
+        if (isNaN(page) || page < 1)
+            page = 1;
+        if (isNaN(limit) || limit < 1)
+            limit = 20;
+        if (limit > 100)
+            limit = 100; // Protection contre une requête trop lourde
+        const offset = (page - 1) * limit;
+        const result = await pool.query(getAllUsersSQL, [limit, offset]);
         return c.json(result.rows.map(user => { const { password, ...rest } = user; return rest; }));
     }
     catch (err) {
@@ -37,7 +47,7 @@ userRoutes.get('/:id', async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 });
-userRoutes.put('/:id', async (c) => {
+userRoutes.put('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);
@@ -77,7 +87,7 @@ userRoutes.put('/:id', async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 });
-userRoutes.delete('/:id', async (c) => {
+userRoutes.delete('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);

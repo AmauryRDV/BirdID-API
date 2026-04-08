@@ -47,5 +47,5 @@ DELETE FROM users WHERE id = $1 RETURNING id;
 `;
 
 export const getAllUsersSQL = `
-SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users;
+SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2;
 `;

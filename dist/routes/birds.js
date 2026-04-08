@@ -3,11 +3,21 @@ import { getAllBirdsSQL, getBirdByIdSQL, insertBirdSQL, updateBirdSQL, deleteBir
 import { pool } from '../db_connect.js';
 import { isNonEmptyString } from '../services/validation.js';
 import { DatabaseError } from 'pg';
+import { honoJwtMiddleware } from '../middleware/middleware.js';
 const birdRoutes = new Hono();
 // GET /birds - Get all birds
 birdRoutes.get('/', async (c) => {
     try {
-        const result = await pool.query(getAllBirdsSQL);
+        let page = parseInt(c.req.query('page') || '1', 10);
+        let limit = parseInt(c.req.query('limit') || '20', 10);
+        if (isNaN(page) || page < 1)
+            page = 1;
+        if (isNaN(limit) || limit < 1)
+            limit = 20;
+        if (limit > 100)
+            limit = 100;
+        const offset = (page - 1) * limit;
+        const result = await pool.query(getAllBirdsSQL, [limit, offset]);
         return c.json(result.rows);
     }
     catch (err) {
@@ -38,7 +48,7 @@ birdRoutes.get('/:id', async (c) => {
     }
 });
 // POST /birds - Create a new bird
-birdRoutes.post('/', async (c) => {
+birdRoutes.post('/', honoJwtMiddleware, async (c) => {
     try {
         const body = await c.req.json();
         const { birdname, latinbirdname, media, funfact, rarity, habitat } = body;
@@ -69,7 +79,7 @@ birdRoutes.post('/', async (c) => {
     }
 });
 // PUT /birds/:id - Update bird
-birdRoutes.put('/:id', async (c) => {
+birdRoutes.put('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);
@@ -105,7 +115,7 @@ birdRoutes.put('/:id', async (c) => {
     }
 });
 // DELETE /birds/:id - Delete bird
-birdRoutes.delete('/:id', async (c) => {
+birdRoutes.delete('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);

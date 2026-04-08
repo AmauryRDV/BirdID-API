@@ -3,10 +3,20 @@ import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, upd
 import { pool } from '../db_connect.js';
 import { isPositiveInteger, isNonEmptyString, isValidDateFormat, isValidTimeFormat } from '../services/validation.js';
 import { DatabaseError } from 'pg';
+import { honoJwtMiddleware } from '../middleware/middleware.js';
 const observationRoutes = new Hono();
 observationRoutes.get('/', async (c) => {
     try {
-        const result = await pool.query(getAllObservationsSQL);
+        let page = parseInt(c.req.query('page') || '1', 10);
+        let limit = parseInt(c.req.query('limit') || '20', 10);
+        if (isNaN(page) || page < 1)
+            page = 1;
+        if (isNaN(limit) || limit < 1)
+            limit = 20;
+        if (limit > 100)
+            limit = 100; // Sécurité
+        const offset = (page - 1) * limit;
+        const result = await pool.query(getAllObservationsSQL, [limit, offset]);
         return c.json(result.rows);
     }
     catch (err) {
@@ -35,7 +45,7 @@ observationRoutes.get('/:id', async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 });
-observationRoutes.post('/', async (c) => {
+observationRoutes.post('/', honoJwtMiddleware, async (c) => {
     try {
         const body = await c.req.json();
         const { birdid, userid, birdname, date, time, note, size, gender, imagepath } = body;
@@ -72,7 +82,7 @@ observationRoutes.post('/', async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 });
-observationRoutes.put('/:id', async (c) => {
+observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);
@@ -113,7 +123,7 @@ observationRoutes.put('/:id', async (c) => {
         return c.json({ error: 'Erreur interne du serveur' }, 500);
     }
 });
-observationRoutes.delete('/:id', async (c) => {
+observationRoutes.delete('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'));
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);
