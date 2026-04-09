@@ -32,6 +32,7 @@ authRoutes.post('/login', async (c) => {
         const payload = {
             id: user.id,
             email: user.email,
+            is_admin: user.is_admin, // Ajout du statut admin au payload JWT
             exp: Math.floor(Date.now() / 1000) + 60 * 60, // Le token expirera dans 1 heure (3600 secondes)
         };
         const token = await sign(payload, JWT_SECRET);

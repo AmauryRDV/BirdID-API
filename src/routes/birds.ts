@@ -5,6 +5,7 @@ import { pool } from '../db_connect.js';
 import { isNonEmptyString } from '../services/validation.js';
 import { DatabaseError } from 'pg';
 import { honoJwtMiddleware } from '../middleware/middleware.js';
+import { adminGuard } from '../middleware/adminGuard.js'; // Import du nouveau middleware
 
 const birdRoutes = new Hono();
 
@@ -48,7 +49,7 @@ birdRoutes.get('/:id', async (c) => {
 });
 
 // POST /birds - Create a new bird
-birdRoutes.post('/', honoJwtMiddleware, async (c) => {
+birdRoutes.post('/', honoJwtMiddleware, adminGuard, async (c) => {
   try {
     const body = await c.req.json();
     const { birdname, latinbirdname, media, funfact, rarity, habitat } = body;
@@ -73,7 +74,7 @@ birdRoutes.post('/', honoJwtMiddleware, async (c) => {
 });
 
 // PUT /birds/:id - Update bird
-birdRoutes.put('/:id', honoJwtMiddleware, async (c) => {
+birdRoutes.put('/:id', honoJwtMiddleware, adminGuard, async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
@@ -101,7 +102,7 @@ birdRoutes.put('/:id', honoJwtMiddleware, async (c) => {
 });
 
 // DELETE /birds/:id - Delete bird
-birdRoutes.delete('/:id', honoJwtMiddleware, async (c) => {
+birdRoutes.delete('/:id', honoJwtMiddleware, adminGuard, async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {

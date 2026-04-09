@@ -9,6 +9,7 @@ export interface User {
   avatar: string;
   created_at: Date;
   updated_at: Date;
+  is_admin?: boolean; 
 }
 
 
@@ -22,7 +23,8 @@ CREATE TABLE IF NOT EXISTS users (
   points INTEGER DEFAULT 0,
   avatar VARCHAR(255) DEFAULT '0',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_admin BOOLEAN DEFAULT FALSE -- Ajout de la colonne is_admin
 );
 `;
 
@@ -30,16 +32,17 @@ export const insertUserSQL = `
 INSERT INTO users (userName, email, password, notes, points, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, userName, email, password, notes, points, avatar, created_at, updated_at;
 `;
 
+// Ajout de is_admin dans toutes les requêtes SELECT
 export const getUserByEmailSQL = `
-SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at FROM users WHERE email = $1;
+SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at, is_admin FROM users WHERE email = $1;
 `;
 
 export const getUserByIdSQL = `
-SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users WHERE id = $1;
+SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at, is_admin FROM users WHERE id = $1;
 `;
 
 export const updateUserSQL = `
-UPDATE users SET userName = $1, email = $2, password = $3, notes = $4, points = $5, avatar = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, userName, email, password, notes, points, avatar, created_at, updated_at;
+UPDATE users SET userName = $1, email = $2, password = $3, notes = $4, points = $5, avatar = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, userName, email, password, notes, points, avatar, created_at, updated_at, is_admin;
 `;
 
 export const deleteUserSQL = `
@@ -47,5 +50,5 @@ DELETE FROM users WHERE id = $1 RETURNING id;
 `;
 
 export const getAllUsersSQL = `
-SELECT id, userName, email, notes, points, avatar, created_at, updated_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2;
+SELECT id, userName, email, notes, points, avatar, created_at, updated_at, is_admin FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2;
 `;
