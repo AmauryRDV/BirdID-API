@@ -9,7 +9,7 @@ import { honoJwtMiddleware } from '../middleware/middleware.js';
 
 const userRoutes = new Hono();
 
-userRoutes.get('/', async (c) => {
+userRoutes.get('/', honoJwtMiddleware, async (c) => {
   try {
     let page = parseInt(c.req.query('page') || '1', 10);
     let limit = parseInt(c.req.query('limit') || '20', 10);
@@ -30,7 +30,7 @@ userRoutes.get('/', async (c) => {
   }
 });
 
-userRoutes.get('/:id', async (c) => {
+userRoutes.get('/:id', honoJwtMiddleware, async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {

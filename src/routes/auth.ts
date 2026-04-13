@@ -64,7 +64,8 @@ authRoutes.post('/register', async (c) => {
     }
 });
 
-
-
+authRoutes.post('/logout', async (c) => {
+  return c.json({ message: 'Déconnexion réussie' }, 200);
+});
 
 export default authRoutes;
