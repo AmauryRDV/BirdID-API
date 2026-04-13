@@ -1,7 +1,7 @@
 import { jwt } from 'hono/jwt'
 import 'dotenv/config'; 
 
-const JWT_SECRET = process.env.JWT_SECRET;
+export const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
   console.error('ERREUR CRITIQUE: La variable d\'environnement JWT_SECRET n\'est pas définie ou utilise une valeur par défaut non sécurisée.');

@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: https://birdid-api.onrender.com/auth/login
+  url: https://birdid-api.onrender.com/login
   body:
     type: json
     data: |

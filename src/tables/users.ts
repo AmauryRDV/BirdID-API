@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar VARCHAR(255) DEFAULT '0',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  is_admin BOOLEAN DEFAULT FALSE -- Ajout de la colonne is_admin
+  is_admin BOOLEAN DEFAULT FALSE
 );
 `;
 
@@ -32,7 +32,6 @@ export const insertUserSQL = `
 INSERT INTO users (userName, email, password, notes, points, avatar) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, userName, email, password, notes, points, avatar, created_at, updated_at;
 `;
 
-// Ajout de is_admin dans toutes les requêtes SELECT
 export const getUserByEmailSQL = `
 SELECT id, userName, email, password, notes, points, avatar, created_at, updated_at, is_admin FROM users WHERE email = $1;
 `;

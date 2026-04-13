@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:3000/users
+  url: https://birdid-api.onrender.com/users
   auth: inherit
 
 settings:

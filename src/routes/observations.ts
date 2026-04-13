@@ -15,7 +15,7 @@ observationRoutes.get('/', async (c) => {
     
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(limit) || limit < 1) limit = 20;
-    if (limit > 100) limit = 100; // Sécurité
+    if (limit > 100) limit = 100;
     
     const offset = (page - 1) * limit;
     const result = await pool.query(getAllObservationsSQL, [limit, offset]);
@@ -54,14 +54,12 @@ observationRoutes.post('/', honoJwtMiddleware, async (c) => {
       return c.json({ error: 'Champs requis manquants (birdid, birdname, date, time, size, gender, imagepath)' }, 400);
     }
     if (!isPositiveInteger(birdid)) return c.json({ error: 'L\'ID de l\'oiseau doit être un entier positif' }, 400);
-    // Le userid doit venir du JWT, pas du corps de la requête
     const userIdFromJwt = jwtPayload.id;
     if (!isNonEmptyString(birdname)) return c.json({ error: 'Le nom de l\'oiseau ne peut pas être vide' }, 400);
     if (!isValidDateFormat(date)) return c.json({ error: 'Le format de la date est invalide (attendu: YYYY-MM-DD)' }, 400);
     if (!isValidTimeFormat(time)) return c.json({ error: 'Le format de l\'heure est invalide (attendu: HH:MM:SS)' }, 400);
     if (note !== undefined && note !== null && !isNonEmptyString(note)) return c.json({ error: 'La note doit être une chaîne de caractères non vide' }, 400);
     if (!isPositiveInteger(size)) return c.json({ error: 'La taille doit être un entier positif' }, 400);
-    // Exemple de validation pour un champ avec des valeurs spécifiques
     if (!isNonEmptyString(gender) || !['male', 'female', 'unknown'].includes(gender.toLowerCase())) return c.json({ error: 'Le genre est invalide (attendu: male, female, unknown)' }, 400);
     if (!isNonEmptyString(imagepath)) return c.json({ error: 'Le chemin de l\'image ne peut pas être vide' }, 400);    
     const result = await pool.query(insertObservationSQL, [birdid, userIdFromJwt, birdname, date, time, note || null, size, gender, imagepath]);
@@ -79,7 +77,6 @@ observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
 
-  // Récupérer l'observation pour vérifier son propriétaire
   const existingObservationResult = await pool.query(getObservationByIdSQL, [id]);
   if (existingObservationResult.rows.length === 0) return c.notFound();
   const existingObservation = existingObservationResult.rows[0];
@@ -97,7 +94,6 @@ observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
       return c.json({ error: 'Champs requis manquants (birdid, birdname, date, time, size, gender, imagepath)' }, 400);
     }
     if (!isPositiveInteger(birdid)) return c.json({ error: 'L\'ID de l\'oiseau doit être un entier positif' }, 400);
-    // Le userid doit venir du JWT, pas du corps de la requête, et ne doit pas être modifiable ici
     const userIdFromJwt = jwtPayload.id;
     if (userIdFromJwt !== existingObservation.userid && !jwtPayload.is_admin) {
       return c.json({ error: 'Accès interdit : vous ne pouvez pas modifier le propriétaire de l\'observation.' }, 403);
@@ -125,7 +121,6 @@ observationRoutes.delete('/:id', honoJwtMiddleware, async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
 
-  // Récupérer l'observation pour vérifier son propriétaire
   const existingObservationResult = await pool.query(getObservationByIdSQL, [id]);
   if (existingObservationResult.rows.length === 0) return c.notFound();
   const existingObservation = existingObservationResult.rows[0];

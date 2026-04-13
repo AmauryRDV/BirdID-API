@@ -6,15 +6,10 @@ import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { sign } from 'hono/jwt';
 import { isValidEmail, isStrongPassword, isNonEmptyString } from '../services/validation.js';
+import { JWT_SECRET } from '../middleware/middleware.js';
 import 'dotenv/config'; 
 
 const authRoutes = new Hono();
-
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET === 'super_secret_dev_key_do_not_use_in_prod') {
-    console.error('ERREUR CRITIQUE: La variable d\'environnement JWT_SECRET n\'est pas définie ou utilise une valeur par défaut non sécurisée.');
-    throw new Error('JWT_SECRET doit être défini avec une clé forte et unique dans le fichier .env.');
-}
 
 authRoutes.post('/login', async (c) => {
     try {
@@ -32,10 +27,10 @@ authRoutes.post('/login', async (c) => {
         const payload = {
             id: user.id,
             email: user.email,
-            is_admin: user.is_admin, // Ajout du statut admin au payload JWT
-            exp: Math.floor(Date.now() / 1000) + 60 * 60, // Le token expirera dans 1 heure (3600 secondes)
+                is_admin: user.is_admin,
+                exp: Math.floor(Date.now() / 1000) + 60 * 60,
         };
-        const token = await sign(payload, JWT_SECRET);
+        const token = await sign(payload, JWT_SECRET as string);
         return c.json({ message: 'Connexion réussie', token, id: user.id, userName: user.username }, 200);
     } catch (err) {
         console.error(err);
