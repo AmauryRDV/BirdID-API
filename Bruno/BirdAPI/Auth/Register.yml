@@ -5,14 +5,14 @@ info:
 
 http:
   method: POST
-  url: https://birdid-api.onrender.com/auth/register
+  url: https://birdid-api.onrender.com/register
   body:
     type: json
     data: |
       {
-        "userName": "TestUser",
-        "email": "test@example.com",
-        "password": "password123",
+        "userName": "email",
+        "email": "email@email.com",
+        "password": "email123",
         "notes": "Ceci est un utilisateur de test.",
         "points": 100,
         "avatar": "0"
