@@ -1,13 +1,7 @@
 import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
-import {
-  getAllBirdsSQL,
-  getBirdByIdSQL,
-  insertBirdSQL,
-  updateBirdSQL,
-  deleteBirdSQL
-} from '../db/tables/birds.js';
+import { getAllBirdsSQL, getBirdByIdSQL, insertBirdSQL, updateBirdSQL, deleteBirdSQL } from '../db/tables/birds.js';
 
 export const getAllBirds = async (c: Context) => {
   try {

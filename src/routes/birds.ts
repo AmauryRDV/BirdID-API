@@ -12,9 +12,9 @@ const birdRoutes = new Hono();
 birdRoutes.get('/', async (c) => {
   try {
     let page = parseInt(c.req.query('page') || '1', 10);
-    let limit = parseInt(c.req.query('limit') || '20', 10);    
+    let limit = parseInt(c.req.query('limit') || '20', 10);
     if (isNaN(page) || page < 1) page = 1;
-    if (isNaN(limit) || limit < 1) limit = 20;    if (limit > 100) limit = 100;    
+    if (isNaN(limit) || limit < 1) limit = 20;    if (limit > 100) limit = 100;
     const offset = (page - 1) * limit;
     const result = await pool.query(getAllBirdsSQL, [limit, offset]);
     return c.json(result.rows);

@@ -1,13 +1,7 @@
 import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
-import {
-  getAllObservationsSQL,
-  getObservationByIdSQL,
-  insertObservationSQL,
-  updateObservationSQL,
-  deleteObservationSQL
-} from '../db/tables/observations.js';
+import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
 
 export const getAllObservations = async (c: Context) => {
   try {

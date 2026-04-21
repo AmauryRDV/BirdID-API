@@ -1,0 +1,21 @@
+info:
+  name: Refresh
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: https://birdid-api.onrender.com/refresh
+  body:
+    type: json
+    data: |-
+      {
+          "refreshToken": "20576d67918095606e1cf4698b8ce98abfb0a537ee6ebb7baeb69d18f9e98144"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

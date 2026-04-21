@@ -14,8 +14,8 @@ import { insertRefreshTokenSQL, getRefreshTokenByHashedTokenSQL, revokeRefreshTo
 const authRoutes = new Hono();
 
 // Constants for token expiration
-const ACCESS_TOKEN_EXPIRATION_SECONDS = 60 * 60;
-const REFRESH_TOKEN_EXPIRATION_DAYS = 7;
+const ACCESS_TOKEN_EXPIRATION_SECONDS = 60 * 60; // 1 hour
+const REFRESH_TOKEN_EXPIRATION_DAYS = 7; // 7 days
 
 authRoutes.post('/login', async (c) => {
     try {
@@ -39,12 +39,12 @@ authRoutes.post('/login', async (c) => {
         const token = await sign(payload, JWT_SECRET as string);
 
         // Generate and store refresh token
-        const refreshToken = randomBytes(32).toString('hex');
-        const hashedRefreshToken = createHash('sha256').update(refreshToken).digest('hex');
+        const refreshToken = randomBytes(32).toString('hex'); // Generate a random string for the refresh token
+        const hashedRefreshToken = createHash('sha256').update(refreshToken).digest('hex'); // Hash it for storage
         const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
 
         await pool.query(insertRefreshTokenSQL, [user.id, hashedRefreshToken, refreshTokenExpiresAt]);
-        return c.json({ 
+        return c.json({
             message: 'Connexion réussie', 
             token,
             refreshToken,
@@ -55,7 +55,7 @@ authRoutes.post('/login', async (c) => {
         console.error(err);
         if (err instanceof DatabaseError) {
             if (err.code === '23505') { // Unique violation, e.g., if refresh token hash somehow collides (highly unlikely)
-                return c.json({ error: 'Erreur de base de données: Conflit de token de rafraîchissement' }, 500); // Unique violation, e.g., if refresh token hash somehow collides (highly unlikely)
+                return c.json({ error: 'Erreur de base de données: Conflit de token de rafraîchissement' }, 500);
             }
             return c.json({ error: 'Erreur de base de données lors de la connexion' }, 500);
         }
@@ -79,7 +79,7 @@ authRoutes.post('/register', async (c) => {
     if (err instanceof DatabaseError) {
         if (err.code === '23505') {
             return c.json({ error: 'Email déjà utilisé' }, 409);
-        }
+            } 
       return c.json({ error: 'Erreur de base de données lors de l\'enregistrement' }, 500);
     }   
     return c.json({ error: 'Erreur interne du serveur' }, 500);
@@ -106,11 +106,10 @@ authRoutes.post('/refresh', async (c) => {
         const storedRefreshToken = result.rows[0];
 
         // Check if token is expired
-        if (new Date(storedRefreshToken.expires_at) < new Date()) { // Optionally, revoke the expired token from the DB
+        if (new Date(storedRefreshToken.expires_at) < new Date()) {
             await pool.query(revokeRefreshTokenSQL, [hashedRefreshToken]);
             return c.json({ error: 'Token de rafraîchissement expiré' }, 401);
         }
-        // Check if token is revoked
         if (storedRefreshToken.revoked_at !== null) {
             return c.json({ error: 'Token de rafraîchissement révoqué' }, 401);
         }
@@ -118,8 +117,7 @@ authRoutes.post('/refresh', async (c) => {
         // Get user details to create new access token payload
         const userResult = await pool.query(getUserByIdSQL, [storedRefreshToken.user_id]);
         if (userResult.rows.length === 0) { // This should ideally not happen if user_id is a foreign key and ON DELETE CASCADE is not used
-            // or if the user was deleted without revoking tokens.
-            return c.json({ error: 'Utilisateur associé au token introuvable' }, 401);
+            return c.json({ error: 'Utilisateur associé au token introuvable' }, 401); // or if the user was deleted without revoking tokens.
         }
         const user = userResult.rows[0] as User;
 
@@ -131,7 +129,6 @@ authRoutes.post('/refresh', async (c) => {
         };
         const newAccessToken = await sign(newAccessTokenPayload, JWT_SECRET as string);
 
-        // Refresh Token Rotation
         await pool.query(revokeRefreshTokenSQL, [hashedRefreshToken]);
         const newRefreshToken = randomBytes(32).toString('hex');
         const newHashedRefreshToken = createHash('sha256').update(newRefreshToken).digest('hex');
