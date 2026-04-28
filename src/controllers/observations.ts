@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
+import { uploadObservationImage } from '../services/storage-service.js';
 
 export const getAllObservations = async (c: Context) => {
   try {
@@ -13,6 +14,30 @@ export const getAllObservations = async (c: Context) => {
       return c.json({ error: 'Erreur de base de données lors de la récupération des observations' }, 500);
     }
     return c.json({ error: 'Erreur interne du serveur' }, 500);
+  }
+};
+
+export const uploadImage = async (c: Context) => {
+  try {
+    const body = await c.req.parseBody();
+    const file = body['file']; 
+
+    if (!file || !(file instanceof File)) {
+      return c.json({ error: 'Fichier manquant ou invalide. Assurez-vous d\'utiliser le champ "file" en Multipart Form.' }, 400);
+    }
+
+    const extension = file.name.split('.').pop() || 'jpg';
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
+    const filePath = `uploads/${uniqueFileName}`;
+    
+    const bucketName = 'observations'; 
+
+    const imageUrl = await uploadObservationImage(file, bucketName, filePath);
+
+    return c.json({ message: 'Upload réussi', imageUrl }, 201);
+  } catch (err) {
+    console.error('Erreur lors de l\'upload de l\'image:', err);
+    return c.json({ error: 'Erreur lors de l\'upload de l\'image' }, 500);
   }
 };
 

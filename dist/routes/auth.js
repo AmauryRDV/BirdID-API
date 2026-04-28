@@ -6,12 +6,17 @@ import { DatabaseError } from 'pg';
 import { sign } from 'hono/jwt';
 import { isValidEmail, isStrongPassword, isNonEmptyString } from '../services/validation.js';
 import 'dotenv/config';
+
+
 const authRoutes = new Hono();
 const JWT_SECRET = process.env.JWT_SECRET;
+
 if (!JWT_SECRET || JWT_SECRET === 'super_secret_dev_key_do_not_use_in_prod') {
     console.error('ERREUR CRITIQUE: La variable d\'environnement JWT_SECRET n\'est pas définie ou utilise une valeur par défaut non sécurisée.');
     throw new Error('JWT_SECRET doit être défini avec une clé forte et unique dans le fichier .env.');
 }
+
+
 authRoutes.post('/login', async (c) => {
     try {
         const body = await c.req.json();

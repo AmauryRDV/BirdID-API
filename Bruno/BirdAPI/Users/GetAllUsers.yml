@@ -6,7 +6,9 @@ info:
 http:
   method: GET
   url: https://birdid-api.onrender.com/users
-  auth: inherit
+  auth:
+    type: bearer
+    token: "{{authToken}}"
 
 settings:
   encodeUrl: true

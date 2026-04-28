@@ -9,10 +9,7 @@ export const getAllBirds = async (c: Context) => {
     return c.json(result.rows);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la récupération des oiseaux' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur de la base de données lors de la récupération des oiseaux' }, 500);
   }
 };
 

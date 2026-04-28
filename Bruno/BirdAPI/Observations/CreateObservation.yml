@@ -1,0 +1,45 @@
+info:
+  name: CreateObservation
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://birdid-api.onrender.com/observations
+  body:
+    type: multipart-form
+    data:
+      - name: birdid
+        type: text
+        value: "12"
+      - name: birdname
+        type: text
+        value: Mésange bleue
+      - name: date
+        type: text
+        value: 2024-05-21
+      - name: time
+        type: text
+        value: 10:45:00
+      - name: size
+        type: text
+        value: "12"
+      - name: gender
+        type: text
+        value: female
+      - name: image
+        type: file
+        value:
+          - C:\Users\Admin\Pictures\Screenshots\Capture d'écran 2025-12-27 111429.png
+      - name: note
+        type: text
+        value: Observé près d'un chêne
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwNzgzOX0.bNRYXrW-fyN16cXGKNz9iRvqTQYaXFIPOSnzP_rw7v4
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -98,8 +98,6 @@ observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
   }
 
   try {
-    const jwtPayload = c.get('jwtPayload') as { id: number, is_admin: boolean };
-
     const body = await c.req.parseBody();
     const birdid = parseInt(body.birdid as string, 10);
     const birdname = body.birdname as string;
