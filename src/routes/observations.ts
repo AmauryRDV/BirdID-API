@@ -70,7 +70,9 @@ observationRoutes.post('/', honoJwtMiddleware, async (c) => {
     if (!isPositiveInteger(size)) return c.json({ error: 'La taille doit être un entier positif' }, 400);
     if (!isNonEmptyString(gender) || !['male', 'female', 'unknown'].includes(gender.toLowerCase())) return c.json({ error: 'Le genre est invalide (attendu: male, female, unknown)' }, 400);
     
-    const fileName = `user_${userIdFromJwt}_${Date.now()}_${imageFile.name}`;
+    // Sanitize the filename to remove special characters and spaces
+    const sanitizedImageName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `user_${userIdFromJwt}_${Date.now()}_${sanitizedImageName}`;
     const imagepath = await uploadObservationImage(imageFile, 'observation', fileName);
 
     const result = await pool.query(insertObservationSQL, [birdid, userIdFromJwt, birdname, date, time, note || null, size, gender, imagepath]);
@@ -126,7 +128,9 @@ observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
     let imagepath = existingObservation.imagepath; 
 
     if (image instanceof File) {
-      const fileName = `user_${userIdFromJwt}_${Date.now()}_${image.name}`;
+      // Sanitize the filename to remove special characters and spaces
+      const sanitizedImageName = image.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `user_${userIdFromJwt}_${Date.now()}_${sanitizedImageName}`;
       imagepath = await uploadObservationImage(image, 'observation', fileName);
     }
 

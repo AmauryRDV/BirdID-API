@@ -14,32 +14,28 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export const uploadObservationImage = async (file: File, bucketName: string, filePath: string): Promise<string> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
-
-    let contentType = file.type;
-    if (!contentType || contentType === 'application/octet-stream') {
-        const extension = filePath.split('.').pop()?.toLowerCase();
-        switch (extension) {
-            case 'jpg':
-            case 'jpeg':
-                contentType = 'image/jpeg';
-                break;
-            case 'png':
-                contentType = 'image/png';
-                break;
-            case 'webp':
-                contentType = 'image/webp';
-                break;
-            // Si l'extension n'est pas dans la liste, contentType conserve sa valeur initiale (potentiellement vide).
-        }
-    }
     
-    // On s'assure de ne jamais envoyer une chaîne vide, ce qui est une valeur d'en-tête invalide.
-    // On utilise 'application/octet-stream' comme valeur par défaut si aucun type n'a pu être déterminé.
-    const finalContentType = contentType || 'application/octet-stream';
+    // Determine content type from the file path extension for reliability.
+    // The file.type from the client can be missing or incorrect on the server.
+    const extension = filePath.split('.').pop()?.toLowerCase();
+    let contentType = 'application/octet-stream'; // Default value
+    
+    switch (extension) {
+        case 'jpg':
+        case 'jpeg':
+            contentType = 'image/jpeg';
+            break;
+        case 'png':
+            contentType = 'image/png';
+            break;
+        case 'webp':
+            contentType = 'image/webp';
+            break;
+    }
 
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, arrayBuffer, { contentType: finalContentType, upsert: true });
+      .upload(filePath, arrayBuffer, { contentType: contentType, upsert: true });
 
     if (error) throw error;
 
