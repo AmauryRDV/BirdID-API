@@ -71,7 +71,7 @@ observationRoutes.post('/', honoJwtMiddleware, async (c) => {
     if (!isNonEmptyString(gender) || !['male', 'female', 'unknown'].includes(gender.toLowerCase())) return c.json({ error: 'Le genre est invalide (attendu: male, female, unknown)' }, 400);
     
     const fileName = `user_${userIdFromJwt}_${Date.now()}_${imageFile.name}`;
-    const imagepath = await uploadObservationImage(imageFile, 'observations', fileName);
+    const imagepath = await uploadObservationImage(imageFile, 'observation', fileName);
 
     const result = await pool.query(insertObservationSQL, [birdid, userIdFromJwt, birdname, date, time, note || null, size, gender, imagepath]);
     return c.json(result.rows[0], 201);
@@ -127,7 +127,7 @@ observationRoutes.put('/:id', honoJwtMiddleware, async (c) => {
 
     if (image instanceof File) {
       const fileName = `user_${userIdFromJwt}_${Date.now()}_${image.name}`;
-      imagepath = await uploadObservationImage(image, 'observations', fileName);
+      imagepath = await uploadObservationImage(image, 'observation', fileName);
     }
 
     const result = await pool.query(updateObservationSQL, [birdid, existingObservation.userid, birdname, date, time, note || null, size, gender, imagepath, id]);

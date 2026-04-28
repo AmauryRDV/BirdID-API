@@ -36,7 +36,7 @@ http:
         value: Observé près d'un chêne
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwNzgzOX0.bNRYXrW-fyN16cXGKNz9iRvqTQYaXFIPOSnzP_rw7v4
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwODE3NH0.0T80qqp7O8y4NErKBaQ0ooUarSGBZAfcnQ5iG9Jg1Qw
 
 settings:
   encodeUrl: true
