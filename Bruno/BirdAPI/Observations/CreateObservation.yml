@@ -44,7 +44,7 @@ http:
         contentType: File
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwODE3NH0.0T80qqp7O8y4NErKBaQ0ooUarSGBZAfcnQ5iG9Jg1Qw
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwOTk0Nn0.-fuOfLzlpT2M0vpAGwYch9wvVo9SP7oIBkRGF2AtRBQ
 
 settings:
   encodeUrl: true

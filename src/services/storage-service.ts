@@ -29,12 +29,17 @@ export const uploadObservationImage = async (file: File, bucketName: string, fil
             case 'webp':
                 contentType = 'image/webp';
                 break;
+            // Si l'extension n'est pas dans la liste, contentType conserve sa valeur initiale (potentiellement vide).
         }
     }
     
+    // On s'assure de ne jamais envoyer une chaîne vide, ce qui est une valeur d'en-tête invalide.
+    // On utilise 'application/octet-stream' comme valeur par défaut si aucun type n'a pu être déterminé.
+    const finalContentType = contentType || 'application/octet-stream';
+
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, arrayBuffer, { contentType, upsert: true });
+      .upload(filePath, arrayBuffer, { contentType: finalContentType, upsert: true });
 
     if (error) throw error;
 
