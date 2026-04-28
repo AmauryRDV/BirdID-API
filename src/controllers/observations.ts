@@ -30,7 +30,7 @@ export const uploadImage = async (c: Context) => {
     const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
     const filePath = `uploads/${uniqueFileName}`;
     
-    const bucketName = 'observations'; 
+    const bucketName = 'observation'; 
 
     const imageUrl = await uploadObservationImage(file, bucketName, filePath);
 
