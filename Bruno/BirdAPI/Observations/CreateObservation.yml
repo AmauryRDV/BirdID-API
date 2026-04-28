@@ -9,31 +9,39 @@ http:
   body:
     type: multipart-form
     data:
-      - name: birdid
-        type: text
-        value: "12"
       - name: birdname
         type: text
         value: Mésange bleue
+        contentType: Text
       - name: date
         type: text
         value: 2024-05-21
+        contentType: Text
       - name: time
         type: text
         value: 10:45:00
+        contentType: Text
       - name: size
         type: text
         value: "12"
+        contentType: Text
       - name: gender
         type: text
         value: female
-      - name: image
-        type: file
-        value:
-          - C:\Users\Admin\Pictures\Screenshots\Capture d'écran 2025-12-27 111429.png
+        contentType: Text
+      - name: birdid
+        type: text
+        value: "12"
+        contentType: Text
       - name: note
         type: text
         value: Observé près d'un chêne
+        contentType: Text
+      - name: image
+        type: file
+        value:
+          - C:\Users\Admin\Pictures\Screenshots\111429.png
+        contentType: File
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEwIiwiZW1haWwiOiJlbWFpbEBlbWFpbC5jb20iLCJpc19hZG1pbiI6ZmFsc2UsImV4cCI6MTc3NzQwODE3NH0.0T80qqp7O8y4NErKBaQ0ooUarSGBZAfcnQ5iG9Jg1Qw

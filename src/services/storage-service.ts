@@ -14,13 +14,27 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export const uploadObservationImage = async (file: File, bucketName: string, filePath: string): Promise<string> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
+
+    let contentType = file.type;
+    if (!contentType || contentType === 'application/octet-stream') {
+        const extension = filePath.split('.').pop()?.toLowerCase();
+        switch (extension) {
+            case 'jpg':
+            case 'jpeg':
+                contentType = 'image/jpeg';
+                break;
+            case 'png':
+                contentType = 'image/png';
+                break;
+            case 'webp':
+                contentType = 'image/webp';
+                break;
+        }
+    }
     
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, arrayBuffer, {
-        contentType: file.type,
-        upsert: true,
-      });
+      .upload(filePath, arrayBuffer, { contentType, upsert: true });
 
     if (error) throw error;
 
