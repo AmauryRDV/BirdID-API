@@ -14,16 +14,13 @@ birdRoutes.get('/', async (c) => {
     let page = parseInt(c.req.query('page') || '1', 10);
     let limit = parseInt(c.req.query('limit') || '20', 10);
     if (isNaN(page) || page < 1) page = 1;
-    if (isNaN(limit) || limit < 1) limit = 20;    if (limit > 100) limit = 100;
+    if (isNaN(limit) || limit < 1) limit = 20; if (limit > 100) limit = 100;
     const offset = (page - 1) * limit;
     const result = await pool.query(getAllBirdsSQL, [limit, offset]);
     return c.json(result.rows);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la récupération des oiseaux' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la récupération des oiseaux' }, 500);
   }
 });
 
@@ -32,14 +29,11 @@ birdRoutes.get('/:id', async (c) => {
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(getBirdByIdSQL, [id]);
-    if (result.rows.length === 0) return c.notFound();
+    if (result.rows.length === 0) return c.json({ error: 'Oiseau introuvable' }, 404);
     return c.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la récupération de l\'oiseau' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la récupération de l\'oiseau' }, 500);
   }
 });
 
@@ -60,10 +54,7 @@ birdRoutes.post('/', honoJwtMiddleware, adminGuard, async (c) => {
     return c.json(result.rows[0], 201);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la création de l\'oiseau' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la création de l\'oiseau' }, 500);
   }
 });
 
@@ -87,10 +78,7 @@ birdRoutes.put('/:id', honoJwtMiddleware, adminGuard, async (c) => {
     return c.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la mise à jour de l\'oiseau' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur de base de données lors de la mise à jour de l\'oiseau' }, 500);
   }
 });
 
@@ -103,10 +91,7 @@ birdRoutes.delete('/:id', honoJwtMiddleware, adminGuard, async (c) => {
     return c.json({ message: 'Oiseau supprimé' });
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la suppression de l\'oiseau' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur de base de données lors de la suppression de l\'oiseau' }, 500);
   }
 });
 

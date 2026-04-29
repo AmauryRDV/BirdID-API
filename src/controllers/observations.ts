@@ -1,6 +1,5 @@
 import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
-import { DatabaseError } from 'pg';
 import { getAllObservationsSQL, getObservationByIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
 import { uploadObservationImage } from '../services/storage-service.js';
 
@@ -10,27 +9,26 @@ export const getAllObservations = async (c: Context) => {
     return c.json(result.rows);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la récupération des observations' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la récupération des observations' }, 500);
   }
 };
 
 export const uploadImage = async (c: Context) => {
   try {
     const body = await c.req.parseBody();
-    const file = body['file']; 
+    const file = body['file'];
 
     if (!file || !(file instanceof File)) {
-      return c.json({ error: 'Fichier manquant ou invalide. Assurez-vous d\'utiliser le champ "file" en Multipart Form.' }, 400);
+      return c.json({ error: 'Fichier manquant ou invalide' }, 400);
     }
 
-    const extension = file.name.split('.').pop() || 'jpg';
+    const extension = file.name.split('.').pop();
     const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
+
+    //A verif
     const filePath = `uploads/${uniqueFileName}`;
-    
-    const bucketName = 'observation'; 
+
+    const bucketName = 'observation';
 
     const imageUrl = await uploadObservationImage(file, bucketName, filePath);
 
@@ -42,41 +40,43 @@ export const uploadImage = async (c: Context) => {
 };
 
 export const getObservationById = async (c: Context) => {
-  const id = parseInt(c.req.param('id') || '', 10);
+  const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(getObservationByIdSQL, [id]);
-    if (result.rows.length === 0) return c.notFound();
+    if (result.rows.length === 0) return c.json({ error: 'Observation introuvable' }, 404);
     return c.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la récupération de l\'observation' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la récupération de l\'observation' }, 500);
   }
 };
 
 export const createObservation = async (c: Context) => {
   try {
     const body = await c.req.json();
-    const { birdid, userid, birdname, date, time, note, size, gender, imagepath } = body;
-    if (!birdid || !userid || !birdname || !date || !time || !size || !gender || !imagepath) {
-      return c.json({ error: 'Champs requis manquants' }, 400);
+    if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
+    const requiredKeys = ['birdid', 'userid', 'birdname', 'date', 'time', 'note', 'size', 'gender', 'imagepath'];
+    const missing = [];
+    for (const key of requiredKeys) {
+      const value = body[key];
+      if (value == null || value === '') missing.push(key);
     }
+    if (missing.length) {
+      return c.json({ error: 'Champs requis manquants', missing }, 400);
+    }
+    const { birdid, userid, birdname, date, time, note, size, gender, imagepath } = body;
     const result = await pool.query(insertObservationSQL, [birdid, userid, birdname, date, time, note || null, size, gender, imagepath]);
     return c.json(result.rows[0], 201);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la création de l\'observation' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la création de l\'observation' }, 500);
   }
 };
 
+// A verif
 export const updateObservation = async (c: Context) => {
-  const id = parseInt(c.req.param('id') || '', 10);
+  const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const body = await c.req.json();
@@ -89,25 +89,19 @@ export const updateObservation = async (c: Context) => {
     return c.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la mise à jour de l\'observation' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur lors de la mise à jour de l\'observation' }, 500);
   }
 };
 
 export const deleteObservation = async (c: Context) => {
-  const id = parseInt(c.req.param('id') || '', 10);
+  const id = parseInt(c.req.param('id'));
   if (isNaN(id)) return c.json({ error: 'ID invalide' }, 400);
   try {
     const result = await pool.query(deleteObservationSQL, [id]);
-    if (result.rows.length === 0) return c.notFound();
-    return c.json({ message: 'Observation supprimée' });
+    if (result.rows.length === 0) return c.json({ error: 'Observation inconnu' }, 404);
+    return c.json({ message: 'Observation supprimée' }, 200);
   } catch (err) {
     console.error(err);
-    if (err instanceof DatabaseError) {
-      return c.json({ error: 'Erreur de base de données lors de la suppression de l\'observation' }, 500);
-    }
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+    return c.json({ error: 'Erreur de base de données lors de la suppression de l\'observation' }, 500);
   }
 };

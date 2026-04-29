@@ -7,19 +7,19 @@ import { DatabaseError } from 'pg';
 import { sign } from 'hono/jwt';
 import { isValidEmail, isStrongPassword, isNonEmptyString } from '../services/validation.js';
 import { JWT_SECRET } from '../middleware/middleware.js';
-import 'dotenv/config'; 
+import 'dotenv/config';
 import { randomBytes, createHash } from 'crypto';
 import { insertRefreshTokenSQL, getRefreshTokenByHashedTokenSQL, revokeRefreshTokenSQL, revokeAllUserRefreshTokensSQL } from '../db/tables/refresh_tokens.js';
 
 const authRoutes = new Hono();
 
-// Constants for token expiration
-const ACCESS_TOKEN_EXPIRATION_SECONDS = 60 * 60; // 1 hour
-const REFRESH_TOKEN_EXPIRATION_DAYS = 7; // 7 days
+const ACCESS_TOKEN_EXPIRATION_SECONDS = 60 * 60;
+const REFRESH_TOKEN_EXPIRATION_DAYS = 30;
 
 authRoutes.post('/login', async (c) => {
     try {
         const body = await c.req.json();
+        if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
         const { email, password } = body;
         if (!email || !password) return c.json({ error: 'Champs requis manquants' }, 400);
         if (!isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
@@ -29,7 +29,7 @@ authRoutes.post('/login', async (c) => {
         const user = result.rows[0] as User;
         const isPasswordValid = await verifyPassword(password, user.password);
         if (!isPasswordValid) return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
-        
+
         const payload = {
             id: user.id,
             email: user.email,
@@ -38,58 +38,53 @@ authRoutes.post('/login', async (c) => {
         };
         const token = await sign(payload, JWT_SECRET as string);
 
-        // Generate and store refresh token
-        const refreshToken = randomBytes(32).toString('hex'); // Generate a random string for the refresh token
-        const hashedRefreshToken = createHash('sha256').update(refreshToken).digest('hex'); // Hash it for storage
+        const refreshToken = randomBytes(32).toString('hex');
+        const hashedRefreshToken = createHash('sha256').update(refreshToken).digest('hex');
         const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
 
         await pool.query(insertRefreshTokenSQL, [user.id, hashedRefreshToken, refreshTokenExpiresAt]);
         return c.json({
-            message: 'Connexion réussie', 
+            message: 'Connexion réussie',
             token,
             refreshToken,
-            id: user.id, 
-            userName: user.username 
+            id: user.id,
+            userName: user.username
         }, 200);
     } catch (err) {
         console.error(err);
-        if (err instanceof DatabaseError) {
-            if (err.code === '23505') { // Unique violation, e.g., if refresh token hash somehow collides (highly unlikely)
-                return c.json({ error: 'Erreur de base de données: Conflit de token de rafraîchissement' }, 500);
-            }
-            return c.json({ error: 'Erreur de base de données lors de la connexion' }, 500);
+        if (DatabaseError.code === '23505') {
+            return c.json({ error: 'Conflit de token de rafraîchissement' }, 500);
         }
-        return c.json({ error: 'Erreur interne du serveur' }, 500);
+        return c.json({ error: 'Erreur lors de la connexion' }, 500);
     }
 });
 
 authRoutes.post('/register', async (c) => {
-  try {
-    const body = await c.req.json();
-    const { userName, email, password, notes, points, avatar } = body;
-    if (!userName || !email || !password) return c.json({ error: 'Champs requis manquants' }, 400);
-    if (!isNonEmptyString(userName)) return c.json({ error: 'Le nom d\'utilisateur ne peut pas être vide' }, 400);
-    if (!isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
-    if (!isStrongPassword(password)) return c.json({ error: 'Le mot de passe doit contenir au moins 8 caractères' }, 400);
-    const hashedPassword = await hashPassword(password);
-    const result = await pool.query(insertUserSQL, [userName, email, hashedPassword, notes || null, points || 0, avatar || '0']);
-    return c.json({ message: 'Utilisateur enregistré avec succès', id: result.rows[0].id, userName: result.rows[0].userName }, 201);
-  } catch (err) {
-    console.error(err);
-    if (err instanceof DatabaseError) {
-        if (err.code === '23505') {
+    try {
+        const body = await c.req.json();
+        if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
+        const { userName, email, password, notes, points, avatar } = body;
+        if (!userName || !email || !password) return c.json({ error: 'Champs requis manquants' }, 400);
+        if (!isNonEmptyString(userName)) return c.json({ error: 'Le nom d\'utilisateur ne peut pas être vide' }, 400);
+        if (!isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
+        if (!isStrongPassword(password)) return c.json({ error: 'Le mot de passe doit contenir au moins 8 caractères' }, 400);
+        const hashedPassword = await hashPassword(password);
+        const result = await pool.query(insertUserSQL, [userName, email, hashedPassword, notes || null, points || 0, avatar || '0']);
+        return c.json({ message: 'Utilisateur enregistré avec succès', id: result.rows[0].id, userName: result.rows[0].userName }, 201);
+    } catch (err) {
+        console.error(err);
+        if (DatabaseError.code === '23505') {
             return c.json({ error: 'Email déjà utilisé' }, 409);
-            } 
-      return c.json({ error: 'Erreur de base de données lors de l\'enregistrement' }, 500);
-    }   
-    return c.json({ error: 'Erreur interne du serveur' }, 500);
+        }
+        return c.json({ error: 'Erreur de base de données lors de l\'enregistrement' }, 500);
     }
 });
 
-// New route for refreshing access tokens
+
 authRoutes.post('/refresh', async (c) => {
     try {
         const body = await c.req.json();
+        if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
         const { refreshToken } = body;
 
         if (!refreshToken) {
@@ -105,7 +100,6 @@ authRoutes.post('/refresh', async (c) => {
 
         const storedRefreshToken = result.rows[0];
 
-        // Check if token is expired
         if (new Date(storedRefreshToken.expires_at) < new Date()) {
             await pool.query(revokeRefreshTokenSQL, [hashedRefreshToken]);
             return c.json({ error: 'Token de rafraîchissement expiré' }, 401);
@@ -114,10 +108,9 @@ authRoutes.post('/refresh', async (c) => {
             return c.json({ error: 'Token de rafraîchissement révoqué' }, 401);
         }
 
-        // Get user details to create new access token payload
         const userResult = await pool.query(getUserByIdSQL, [storedRefreshToken.user_id]);
-        if (userResult.rows.length === 0) { // This should ideally not happen if user_id is a foreign key and ON DELETE CASCADE is not used
-            return c.json({ error: 'Utilisateur associé au token introuvable' }, 401); // or if the user was deleted without revoking tokens.
+        if (userResult.rows.length === 0) {
+            return c.json({ error: 'Utilisateur associé au token introuvable' }, 401);
         }
         const user = userResult.rows[0] as User;
 
@@ -137,10 +130,8 @@ authRoutes.post('/refresh', async (c) => {
         return c.json({ message: 'Token d\'accès rafraîchi avec succès', token: newAccessToken, refreshToken: newRefreshToken }, 200);
     } catch (err) {
         console.error(err);
-        if (err instanceof DatabaseError) {
-            return c.json({ error: 'Erreur de base de données lors du rafraîchissement du token' }, 500);
-        }
-        return c.json({ error: 'Erreur interne du serveur' }, 500);
+        return c.json({ error: 'Erreur de base de données lors du rafraîchissement du token' }, 500);
+
     }
 });
 
@@ -159,10 +150,7 @@ authRoutes.post('/logout', async (c) => {
         return c.json({ message: 'Déconnexion réussie' }, 200);
     } catch (err) {
         console.error(err);
-        if (err instanceof DatabaseError) {
-            return c.json({ error: 'Erreur de base de données lors de la déconnexion' }, 500);
-        }
-        return c.json({ error: 'Erreur interne du serveur' }, 500);
+        return c.json({ error: 'Erreur de base de données lors de la déconnexion' }, 500);
     }
 });
 

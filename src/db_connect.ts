@@ -6,9 +6,9 @@ export const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  console.log('Connecté à la base de données PostgreSQL'); // NOSONAR
+  console.log('Connecté à la base de données PostgreSQL'); 
 });
 
 pool.on('error', (err: Error) => {
-  console.error('Erreur de connexion à la base de données:', err); // NOSONAR
+  console.error('Erreur de connexion à la base de données:', err); 
 });
