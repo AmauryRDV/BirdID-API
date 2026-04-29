@@ -41,5 +41,5 @@ DELETE FROM observations WHERE id = $1 RETURNING id;
 `;
 
 export const getAllObservationsSQL = `
-SELECT id, birdid, userid, birdname, date, time, note, size, gender, imagepath FROM observations;
+SELECT id, birdid, userid, birdname, date, time, note, size, gender, imagepath FROM observations LIMIT $1 OFFSET $2;
 `;

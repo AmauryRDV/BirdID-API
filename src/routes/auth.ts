@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import type { User } from '../tables/users.js';
+import type { User } from '../db/tables/users.js';
 import { hashPassword, verifyPassword } from '../services/hashpassword.js';
-import { getUserByIdSQL, insertUserSQL, getUserByEmailSQL } from '../tables/users.js';
+import { getUserByIdSQL, insertUserSQL, getUserByEmailSQL } from '../db/tables/users.js';
 import { pool } from '../db_connect.js';
 import { DatabaseError } from 'pg';
 import { sign } from 'hono/jwt';
@@ -10,6 +10,7 @@ import { JWT_SECRET } from '../middleware/middleware.js';
 import 'dotenv/config';
 import { randomBytes, createHash } from 'crypto';
 import { insertRefreshTokenSQL, getRefreshTokenByHashedTokenSQL, revokeRefreshTokenSQL, revokeAllUserRefreshTokensSQL } from '../db/tables/refresh_tokens.js';
+import { createUser } from '../controllers/users.js';
 
 const authRoutes = new Hono();
 
@@ -52,7 +53,7 @@ authRoutes.post('/login', async (c) => {
         }, 200);
     } catch (err) {
         console.error(err);
-        if (DatabaseError.code === '23505') {
+        if (err instanceof DatabaseError) {
             return c.json({ error: 'Conflit de token de rafraîchissement' }, 500);
         }
         return c.json({ error: 'Erreur lors de la connexion' }, 500);
@@ -61,19 +62,10 @@ authRoutes.post('/login', async (c) => {
 
 authRoutes.post('/register', async (c) => {
     try {
-        const body = await c.req.json();
-        if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
-        const { userName, email, password, notes, points, avatar } = body;
-        if (!userName || !email || !password) return c.json({ error: 'Champs requis manquants' }, 400);
-        if (!isNonEmptyString(userName)) return c.json({ error: 'Le nom d\'utilisateur ne peut pas être vide' }, 400);
-        if (!isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
-        if (!isStrongPassword(password)) return c.json({ error: 'Le mot de passe doit contenir au moins 8 caractères' }, 400);
-        const hashedPassword = await hashPassword(password);
-        const result = await pool.query(insertUserSQL, [userName, email, hashedPassword, notes || null, points || 0, avatar || '0']);
-        return c.json({ message: 'Utilisateur enregistré avec succès', id: result.rows[0].id, userName: result.rows[0].userName }, 201);
+        return await createUser(c);
     } catch (err) {
         console.error(err);
-        if (DatabaseError.code === '23505') {
+        if (err instanceof DatabaseError && err.code === '23505') {
             return c.json({ error: 'Email déjà utilisé' }, 409);
         }
         return c.json({ error: 'Erreur de base de données lors de l\'enregistrement' }, 500);
