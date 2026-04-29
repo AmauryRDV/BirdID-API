@@ -34,7 +34,7 @@ authRoutes.post('/login', async (c) => {
         const payload = {
             id: user.id,
             email: user.email,
-            is_admin: user.is_admin,
+            is_admin: user.isadmin,
             exp: Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRATION_SECONDS,
         };
         const token = await sign(payload, JWT_SECRET as string);
