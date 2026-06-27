@@ -6,7 +6,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || ''; 
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error("ERREUR : SUPABASE_URL ou SUPABASE_SERVICE_KEY manquant dans .env.");
+  console.error("Variable d'environnement(s) manquante");
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -15,10 +15,8 @@ export const uploadObservationImage = async (file: File, bucketName: string, fil
   try {
     const arrayBuffer = await file.arrayBuffer();
     
-    // Determine content type from the file path extension for reliability.
-    // The file.type from the client can be missing or incorrect on the server.
     const extension = filePath.split('.').pop()?.toLowerCase();
-    let contentType = 'application/octet-stream'; // Default value
+    let contentType = 'application/octet-stream'; 
     
     switch (extension) {
         case 'jpg':
@@ -42,7 +40,7 @@ export const uploadObservationImage = async (file: File, bucketName: string, fil
     const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(data.path);
     return publicUrlData.publicUrl;
   } catch (error) {
-    console.error('Erreur lors de l\'envoi vers Supabase:', error);
+    console.error('Erreur lors de l\'envoi', error);
     throw new Error('Échec de l\'upload de l\'image vers le storage');
   }
 };

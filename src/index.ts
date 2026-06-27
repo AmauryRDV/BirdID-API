@@ -7,15 +7,12 @@ import userRoutes from './routes/users.js'
 import birdRoutes from './routes/birds.js'
 import observationRoutes from './routes/observations.js'
 import authRoutes from './routes/auth.js' 
-import { honoJwtMiddleware } from './middleware/middleware.js'; 
-
 const app = new Hono()
 
 app.use('/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
 }))
 
 app.get('/', (c) => c.text('Hello Hono!'))
