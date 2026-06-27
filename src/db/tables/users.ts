@@ -35,7 +35,7 @@ export const getUserByIdSQL = `
 SELECT id, userName, email, notes, points, avatar, is_admin, created_at, updated_at FROM users WHERE id = $1;
 `;
 export const updateUserSQL = `
-UPDATE users SET userName = $1, email = $2, password = $3, notes = $4, points = $5, avatar = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING id, userName, email, notes, points, avatar, is_admin, created_at, updated_at;
+UPDATE users SET userName = $1, email = $2, notes = $3, points = $4, avatar = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING id, userName, email, notes, points, avatar, is_admin, created_at, updated_at;
 `;
 export const deleteUserSQL = `
 DELETE FROM users WHERE id = $1 RETURNING id;

@@ -107,20 +107,16 @@ export const updateUser = async (c: Context) => {
     const points = body.points !== undefined ? body.points : existingUser.points;
     const avatar = body.avatar !== undefined ? body.avatar : existingUser.avatar;
 
-    const currentPasswordHash = existingUser.password;
-
-
     if (userName !== undefined && !isNonEmptyString(userName)) return c.json({ error: 'Le nom d\'utilisateur ne peut pas être vide' }, 400);
     if (email !== undefined && !isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
     if (notes !== undefined && notes !== null && !isNonEmptyString(notes)) return c.json({ error: 'Les notes doivent être une chaîne de caractères non vide' }, 400);
-
     if (avatar !== undefined && avatar !== null && !isNonEmptyString(avatar)) return c.json({ error: 'L\'avatar doit être une chaîne de caractères non vide' }, 400);
 
     if (Object.keys(body).length === 0) {
       return c.json({ message: 'Aucun champ fourni pour la mise à jour' }, 200);
     }
 
-    const result = await pool.query(updateUserSQL, [userName, email, currentPasswordHash, notes, points, avatar, id]);
+    const result = await pool.query(updateUserSQL, [userName, email, notes, points, avatar, id]);
     if (result.rows.length === 0) return c.notFound();
     const { password: _password, ...updatedUserWithoutPassword } = result.rows[0];
     return c.json(updatedUserWithoutPassword);
