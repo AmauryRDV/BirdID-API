@@ -32,7 +32,7 @@ authRoutes.post('/login', async (c) => {
         if (!isPasswordValid) return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
 
         const payload = {
-            id: user.id,
+            id: Number(user.id),
             email: user.email,
             is_admin: user.is_admin,
             exp: Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRATION_SECONDS,
@@ -107,7 +107,7 @@ authRoutes.post('/refresh', async (c) => {
         const user = userResult.rows[0] as User;
 
         const newAccessTokenPayload = {
-            id: user.id,
+            id: Number(user.id),
             email: user.email,
             is_admin: user.is_admin,
             exp: Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRATION_SECONDS,
