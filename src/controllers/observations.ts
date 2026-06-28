@@ -130,7 +130,7 @@ export const updateObservation = async (c: Context) => {
     if (existingResult.rows.length === 0) return c.json({ error: 'Observation introuvable' }, 404);
     const existing = existingResult.rows[0];
 
-    if (jwtPayload.id !== existing.userid && !jwtPayload.is_admin) {
+    if (jwtPayload.id !== Number(existing.userid) && !jwtPayload.is_admin) {
       return c.json({ error: 'Accès interdit : vous n\'êtes pas autorisé à modifier cette observation.' }, 403);
     }
 
@@ -139,12 +139,13 @@ export const updateObservation = async (c: Context) => {
 
     if (Object.keys(body).length === 0) return c.json({ message: 'Aucun champ fourni pour la mise à jour' }, 200);
 
-    const birdid   = body.birdid   !== undefined ? parseInt(body.birdid as string, 10) : existing.birdid;
+    const birdid   = body.birdid   !== undefined ? parseInt(body.birdid as string, 10)   : Number(existing.birdid);
     const birdname = body.birdname !== undefined ? body.birdname as string : existing.birdname;
-    const date     = body.date     !== undefined ? body.date as string : existing.date;
-    const time     = body.time     !== undefined ? body.time as string : existing.time;
+    const date     = body.date     !== undefined ? body.date as string
+                   : (existing.date instanceof Date ? existing.date.toISOString().slice(0, 10) : String(existing.date));
+    const time     = body.time     !== undefined ? body.time as string : String(existing.time);
     const note     = body.note     !== undefined ? body.note as string : existing.note;
-    const size     = body.size     !== undefined ? parseInt(body.size as string, 10) : existing.size;
+    const size     = body.size     !== undefined ? parseInt(body.size as string, 10)      : Number(existing.size);
     const gender   = body.gender   !== undefined ? body.gender as string : existing.gender;
     const latitude  = body.latitude  !== undefined ? parseFloat(body.latitude as string) : existing.latitude;
     const longitude = body.longitude !== undefined ? parseFloat(body.longitude as string) : existing.longitude;
@@ -196,7 +197,7 @@ export const deleteObservation = async (c: Context) => {
     if (existingResult.rows.length === 0) return c.json({ error: 'Observation introuvable' }, 404);
     const existing = existingResult.rows[0];
 
-    if (jwtPayload.id !== existing.userid && !jwtPayload.is_admin) {
+    if (jwtPayload.id !== Number(existing.userid) && !jwtPayload.is_admin) {
       return c.json({ error: 'Accès interdit : vous n\'êtes pas autorisé à supprimer cette observation.' }, 403);
     }
 
