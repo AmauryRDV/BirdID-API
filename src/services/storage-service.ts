@@ -11,6 +11,19 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+export const deleteObservationImage = async (publicUrl: string, bucketName: string): Promise<void> => {
+  try {
+    const marker = `/storage/v1/object/public/${bucketName}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return;
+    const filePath = decodeURIComponent(publicUrl.substring(idx + marker.length));
+    const { error } = await supabase.storage.from(bucketName).remove([filePath]);
+    if (error) console.error('Erreur suppression image storage:', error);
+  } catch (err) {
+    console.error('Erreur suppression image storage:', err);
+  }
+};
+
 export const uploadObservationImage = async (file: File, bucketName: string, filePath: string): Promise<string> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
