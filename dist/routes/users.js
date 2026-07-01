@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { getAllUsers, getUserById, updateUser, deleteUser, updateUserPassword } from '../controllers/users.js';
 import { getObservationsByUserId } from '../controllers/observations.js';
+import { getUserAchievements, updateUserAchievement } from '../controllers/achievements.js';
 import { honoJwtMiddleware } from '../middleware/middleware.js';
 import { adminGuard } from '../middleware/adminGuard.js';
 const userRoutes = new Hono();
@@ -22,6 +23,27 @@ userRoutes.get('/:id', honoJwtMiddleware, async (c) => {
     if (isNaN(id))
         return c.json({ error: 'ID invalide' }, 400);
     return await getUserById(c);
+});
+userRoutes.get('/:id/achievements', honoJwtMiddleware, async (c) => {
+    const id = parseInt(c.req.param('id'), 10);
+    if (isNaN(id))
+        return c.json({ error: 'ID invalide' }, 400);
+    const jwtPayload = c.get('jwtPayload');
+    if (jwtPayload.id !== id && !jwtPayload.is_admin) {
+        return c.json({ error: 'Accès interdit' }, 403);
+    }
+    return await getUserAchievements(c);
+});
+userRoutes.put('/:id/achievements/:achievementId', honoJwtMiddleware, async (c) => {
+    const id = parseInt(c.req.param('id'), 10);
+    const achievementId = parseInt(c.req.param('achievementId'), 10);
+    if (isNaN(id) || isNaN(achievementId))
+        return c.json({ error: 'ID invalide' }, 400);
+    const jwtPayload = c.get('jwtPayload');
+    if (jwtPayload.id !== id && !jwtPayload.is_admin) {
+        return c.json({ error: 'Accès interdit' }, 403);
+    }
+    return await updateUserAchievement(c);
 });
 userRoutes.put('/:id', honoJwtMiddleware, async (c) => {
     const id = parseInt(c.req.param('id'), 10);
