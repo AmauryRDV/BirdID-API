@@ -25,5 +25,5 @@ export const deleteBirdSQL = `
 DELETE FROM birds WHERE id = $1 RETURNING id;
 `;
 export const getAllBirdsSQL = `
-SELECT id, birdname, latinbirdname, media, funfact, rarity, habitat FROM birds;
+SELECT id, birdname, latinbirdname, media, funfact, rarity, habitat FROM birds LIMIT $1 OFFSET $2;
 `;

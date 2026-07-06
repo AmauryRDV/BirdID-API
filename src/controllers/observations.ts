@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { pool } from '../db_connect.js';
 import { getAllObservationsSQL, getObservationByIdSQL, getObservationsByUserIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
 import { DatabaseError } from 'pg';
-import { uploadObservationImage } from '../services/storage-service.js';
+import { uploadObservationImage, deleteObservationImage } from '../services/storage-service.js';
 import { isPositiveInteger, isNonEmptyString, isValidDateFormat, isValidTimeFormat } from '../services/validation.js';
 
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
@@ -199,6 +199,10 @@ export const deleteObservation = async (c: Context) => {
 
     if (jwtPayload.id !== Number(existing.userid) && !jwtPayload.is_admin) {
       return c.json({ error: 'Accès interdit : vous n\'êtes pas autorisé à supprimer cette observation.' }, 403);
+    }
+
+    if (existing.imagepath) {
+      await deleteObservationImage(existing.imagepath, 'observation');
     }
 
     const result = await pool.query(deleteObservationSQL, [id]);
