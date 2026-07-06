@@ -1,7 +1,7 @@
 import { pool } from '../db_connect.js';
 import { getAllObservationsSQL, getObservationByIdSQL, getObservationsByUserIdSQL, insertObservationSQL, updateObservationSQL, deleteObservationSQL } from '../db/tables/observations.js';
 import { DatabaseError } from 'pg';
-import { uploadObservationImage } from '../services/storage-service.js';
+import { uploadObservationImage, deleteObservationImage } from '../services/storage-service.js';
 import { isPositiveInteger, isNonEmptyString, isValidDateFormat, isValidTimeFormat } from '../services/validation.js';
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 Mo
@@ -212,6 +212,9 @@ export const deleteObservation = async (c) => {
         const existing = existingResult.rows[0];
         if (jwtPayload.id !== Number(existing.userid) && !jwtPayload.is_admin) {
             return c.json({ error: 'Accès interdit : vous n\'êtes pas autorisé à supprimer cette observation.' }, 403);
+        }
+        if (existing.imagepath) {
+            await deleteObservationImage(existing.imagepath, 'observation');
         }
         const result = await pool.query(deleteObservationSQL, [id]);
         if (result.rows.length === 0)

@@ -6,6 +6,7 @@ import { cors } from 'hono/cors';
 import userRoutes from './routes/users.js';
 import birdRoutes from './routes/birds.js';
 import observationRoutes from './routes/observations.js';
+import achievementRoutes from './routes/achievements.js';
 import authRoutes from './routes/auth.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 const app = new Hono();
@@ -27,6 +28,7 @@ app.route('/', authRoutes);
 app.route('/users', userRoutes);
 app.route('/birds', birdRoutes);
 app.route('/observations', observationRoutes);
+app.route('/achievements', achievementRoutes);
 serve({
     fetch: app.fetch,
     port: Number(env.PORT) || 3000,
