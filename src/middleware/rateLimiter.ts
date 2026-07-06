@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
+import { logSecurityEvent } from '../services/securityLogger.js';
 
 interface RateLimitEntry {
   count: number;
@@ -31,6 +32,7 @@ export function rateLimiter(options: {
 
     if (entry.count > maxRequests) {
       const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      logSecurityEvent('auth.rate_limited', { ip, path: c.req.path, retryAfter });
       c.header('Retry-After', String(retryAfter));
       return c.json(
         { error: 'Trop de requêtes. Réessayez dans quelques instants.' },

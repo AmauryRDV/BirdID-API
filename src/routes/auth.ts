@@ -11,6 +11,7 @@ import 'dotenv/config';
 import { randomBytes, createHash } from 'crypto';
 import { insertRefreshTokenSQL, getRefreshTokenByHashedTokenSQL, revokeRefreshTokenSQL, revokeAllUserRefreshTokensSQL } from '../db/tables/refresh_tokens.js';
 import { createUser } from '../controllers/users.js';
+import { logSecurityEvent, maskEmail } from '../services/securityLogger.js';
 
 const authRoutes = new Hono();
 
@@ -25,11 +26,22 @@ authRoutes.post('/login', async (c) => {
         if (!email || !password) return c.json({ error: 'Champs requis manquants' }, 400);
         if (!isValidEmail(email)) return c.json({ error: 'Format d\'email invalide' }, 400);
         if (!isStrongPassword(password)) return c.json({ error: 'Le mot de passe doit contenir au moins 8 caractères' }, 400);
+        const clientIp =
+            c.req.header('x-forwarded-for')?.split(',')[0].trim() ??
+            c.req.header('x-real-ip') ??
+            'unknown';
+
         const result = await pool.query(getUserByEmailSQL, [email]);
-        if (result.rows.length === 0) return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
+        if (result.rows.length === 0) {
+            logSecurityEvent('auth.login_failed', { email: maskEmail(email), ip: clientIp, reason: 'unknown_email' });
+            return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
+        }
         const user = result.rows[0] as User;
         const isPasswordValid = await verifyPassword(password, user.password);
-        if (!isPasswordValid) return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
+        if (!isPasswordValid) {
+            logSecurityEvent('auth.login_failed', { email: maskEmail(email), ip: clientIp, reason: 'wrong_password' });
+            return c.json({ error: 'Email ou mot de passe incorrect' }, 401);
+        }
 
         const payload = {
             id: Number(user.id),
