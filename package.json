@@ -8,7 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.11",
+    "@hono/node-server": "^2.0.8",
     "@supabase/supabase-js": "^2.104.1",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
