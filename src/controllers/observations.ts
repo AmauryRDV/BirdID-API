@@ -64,6 +64,7 @@ export const createObservation = async (c: Context) => {
     if (!body || typeof body !== 'object') return c.json({ error: 'Body invalide' }, 400);
 
     const birdid = parseInt(body.birdid as string, 10);
+    const latinbirdname = (body.latinbirdname as string | undefined)?.trim();
     const birdname = body.birdname as string;
     const date = body.date as string;
     const time = body.time as string;
@@ -105,12 +106,24 @@ export const createObservation = async (c: Context) => {
     if (latitude != null && isNaN(latitude)) return c.json({ error: 'Latitude invalide' }, 400);
     if (longitude != null && isNaN(longitude)) return c.json({ error: 'Longitude invalide' }, 400);
 
+    let resolvedBirdId = birdid;
+    if (latinbirdname) {
+      const birdResult = await pool.query(
+        'SELECT id FROM birds WHERE LOWER(latinbirdname) = LOWER($1)',
+        [latinbirdname]
+      );
+      if (birdResult.rows.length === 0) {
+        return c.json({ error: 'Espèce inconnue', latinbirdname }, 400);
+      }
+      resolvedBirdId = birdResult.rows[0].id;
+    }
+
     const sanitizedName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const fileName = `user_${userIdFromJwt}_${Date.now()}_${sanitizedName}`;
     const imagepath = await uploadObservationImage(imageFile, 'observation', fileName);
 
     const result = await pool.query(insertObservationSQL, [
-      birdid, userIdFromJwt, birdname, date, time, note || null, size, gender, imagepath,
+      resolvedBirdId, userIdFromJwt, birdname, date, time, note || null, size, gender, imagepath,
       client_id || null, latitude, longitude,
     ]);
     return c.json(result.rows[0], 201);

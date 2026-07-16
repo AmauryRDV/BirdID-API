@@ -53,9 +53,13 @@ SELECT ${COLS} FROM observations WHERE id = $1;
 `;
 
 export const getObservationsByUserIdSQL = `
-SELECT ${COLS} FROM observations
-WHERE userid = $1
-ORDER BY created_at DESC
+SELECT o.id, o.birdid, o.userid, o.birdname, b.latinbirdname,
+       o.date, o.time, o.note, o.size, o.gender, o.imagepath,
+       o.client_id, o.latitude, o.longitude, o.created_at, o.updated_at
+FROM observations o
+LEFT JOIN birds b ON o.birdid = b.id
+WHERE o.userid = $1
+ORDER BY o.created_at DESC
 LIMIT $2 OFFSET $3;
 `;
 
